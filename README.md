@@ -1,46 +1,163 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-sybase
 
-# n8n-nodes-starter
+Este paquete permite conectar **Sybase** con **n8n** para ejecutar consultas SQL y obtener información de la base de datos. 
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+## 📌 Características
+- 📡 **Ejecutar consultas SQL** en Sybase
+- 📋 **Obtener definición de tablas**
+- 📂 **Listar esquemas y tablas** disponibles
+- 🔒 **Autenticación con credenciales Sybase**
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+## 🚀 Instalación
 
-## Prerequisites
+### 1️⃣ Clonar el repositorio
+```bash
+cd ~/.n8n/custom-nodes
+git clone https://github.com/ricardoaburto/n8n-node-sybase.git
+cd n8n-node-sybase
+```
 
-You need the following installed on your development machine:
+### 2️⃣ Instalar dependencias
+```bash
+npm install
+```
 
-* [git](https://git-scm.com/downloads)
-* Node.js and pnpm. Minimum version Node 18. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  pnpm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+### 3️⃣ Compilar el código TypeScript
+```bash
+npm run build
+```
 
-## Using this starter
+### 4️⃣ Vincular el nodo con n8n
+```bash
+npm link
+```
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+### 5️⃣ Verificar si el nodo está registrado en n8n
+```bash
+n8n list
+```
+Si el nodo aparece en la lista, la instalación fue exitosa. 🎉
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
-   ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
-   ```
-3. Run `pnpm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+## ⚙️ Uso en n8n
+### 1️⃣ Agregar el nodo **Sybase** a un workflow
+- Busca **"Sybase"** en la barra de búsqueda de n8n y agrégalo a tu flujo de trabajo.
 
-## More information
+### 2️⃣ Configurar las credenciales
+- 📌 En la pestaña **Credentials**, ingresa:
+  - **Host**: Dirección del servidor Sybase
+  - **Port**: Puerto de conexión (por defecto 5000)
+  - **Database**: Nombre de la base de datos
+  - **Username**: Usuario de conexión
+  - **Password**: Contraseña
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+### 3️⃣ Seleccionar la operación
+- **Execute Query** → Ejecuta una consulta SQL personalizada
+- **Get Table Definition** → Obtiene la estructura de una tabla
+- **Get Schema and Tables List** → Lista todos los esquemas y tablas disponibles
 
-## License
+### 4️⃣ Ejecutar el workflow
+- Presiona **Execute Node** para ejecutar la consulta.
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+## 📌 Configuración manual de `N8N_CUSTOM_EXTENSIONS`
+Si `n8n` no detecta el nodo, intenta agregar la siguiente variable de entorno:
+
+```bash
+set N8N_CUSTOM_EXTENSIONS=C:\Users\<user>\.n8n\custom-nodes
+```
+
+Luego, reinicia n8n:
+```bash
+n8n stop
+n8n start
+```
+
+## 🐳 Configuración con Docker Compose
+
+Para correr **n8n** junto con **PostgreSQL** y **Redis**, usa el siguiente `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_postgres_password
+      - POSTGRES_DB=n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    context: .
+    dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=your_postgres_password
+      - QUEUE_BULL_REDIS_HOST=redis
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_ENCRYPTION_KEY=your-secure-key
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RELEASE_DATE=2025-03-17T12:00:00Z
+      - N8N_REINSTALL_MISSING_PACKAGES=true
+      - N8N_RUNNERS_ENABLED=true
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
+```
+
+## 🛠️ Solución de Problemas
+### ❌ "require(...).Sybase is not a constructor"
+💡 **Causa:** `n8n` no está reconociendo correctamente el nodo.
+✅ **Solución:** Asegúrate de haber ejecutado `npm link` y haber reiniciado `n8n`.
+
+### ❌ "Error ejecutando consulta: ..."
+💡 **Causa:** Problema de conexión o credenciales incorrectas.
+✅ **Solución:** Revisa que los datos en **Credentials** sean correctos.
+
+## 📜 Licencia
+Este proyecto está bajo la licencia **MIT**.
+
+---
+**Autor:** Ricardo Aburto  
+📧 r.ricardo.aburtojara@gmail.com
+📧 r.ricardo.aburtojara@gmail.com
+
