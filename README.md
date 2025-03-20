@@ -159,5 +159,6 @@ Este proyecto está bajo la licencia **MIT**.
 ---
 **Autor:** Ricardo Aburto  
 📧 r.ricardo.aburtojara@gmail.com
-📧 r.ricardo.aburtojara@gmail.com
+**Autor:** Patricio Palma 
+📧 patricio.r.palma.m@gmail.com
 
